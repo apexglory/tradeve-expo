@@ -13,7 +13,7 @@ import {Text, View} from "./Themed";
 import {FontAwesome} from "@expo/vector-icons";
 import * as React from "react";
 import {useState} from "react";
-import {getOrderList, setOrderList, setProductList} from "../utils/storage";
+import {getUserInfo, getUserList, setUserInfo, setUserList} from "../utils/storage";
 
 
 interface Props{
@@ -21,64 +21,80 @@ interface Props{
     close?:any
     show?:any
 }
-export default function ProductDetail(props:Props){
+export default function Login(props:Props){
     const [data, setData] = useState([])
     const [showPost, setShowPost] = useState(false)
-
-    const imgList=[
-        require('../assets/images/product/1.png'),
-        require('../assets/images/product/2.png'),
-        require('../assets/images/product/3.png'),
-        require('../assets/images/product/4.png'),
-    ]
-
+    const [name,setName]=useState('')
+    const [password,setPassword]=useState('')
     function getData(){
-        getOrderList().then(res => {
+        getUserList().then(res => {
             setData(res)
         })
     }
 
-    function buy(){
-        const obj={
-          userId:'',
-            productId:props.data.id,
-            createTime:new Date(),
+    function login(){
+        if (!name||!password){
+            ToastAndroid.show('Please enter user name and password!',2000)
+            return
         }
+        if (password!='123456'){
+            ToastAndroid.show('Username or Password error!',2000)
+            return
+        }
+        let obj:any={}
+        data.forEach(e=>{
+            if (e.name===name){
+                setUserInfo(e)
+                props.close()
+                return
+            }
+        })
 
+        obj={
+            userId:data.length,
+            userName:name,
+            phoneNumber:'',
+            address:''
+        }
         // @ts-ignore
-        data.unshift(obj)
+        data.push(obj)
         // @ts-ignore
-        setProductList(data).then(()=>{
+        setUserList(data).then(()=>{
             // Toast.show('Post successful!')
-            setShowPost(false)
-            getData()
-            ToastAndroid.show('Post success!',2000)
+            setUserInfo(obj)
+            props.close()
+            ToastAndroid.show('Login Success!',2000)
         })
     }
 
     return <Modal animated={true} animationType={"slide"} visible={props.show}>
 
-        {props?.data&&<ScrollView style={styles.scrollView}>
             <View style={styles.container}>
-            <TouchableOpacity style={styles.close} onPress={props.close}>
-                <Text><FontAwesome size={30} style={{marginBottom: -3}} name={'arrow-left'}/></Text>
-            </TouchableOpacity>
             <View style={{
-                alignItems: 'center', backgroundColor: 'orange',
+               backgroundColor: 'orange',marginTop:48
             }}>
-                <Text style={{fontSize: 20, fontWeight: 'bold'}}>Product detail</Text>
+                <Text style={{fontSize: 48, fontWeight: 'bold',textAlign:'center'}}>Welcome to IdleTrader</Text>
             </View>
-            <Image style={styles.img} source={imgList[props.data.img || 0]}/>
-           <View style={styles.textContainer}>
-               <Text style={{fontSize: 20, fontWeight: 'bold'}}>{props.data.name}</Text>
-               <Text style={{fontSize: 14,marginTop:50}}>{props.data.desc}</Text>
-               <View style={styles.priceContainer}>
-                  <Text>Price: <Text style={{fontSize: 20, fontWeight: 'bold',color:'red'}}>${props.data.price}</Text></Text>
-                   <Button onPress={buy} title={'  Buy  '}></Button>
-               </View>
-           </View>
+                <View style={styles.inputLabel}>
+                    <Text>User Name:</Text><TextInput
+                    placeholder={'User name / Email'}
+                    value={name}
+                    onChangeText={text => {
+                        setName(text)
+                    }} style={styles.input}/>
+                </View>
+                <View style={[styles.inputLabel,{marginBottom:40}]}>
+                    <Text>Password:</Text><TextInput
+                    placeholder={'Use 123456'}
+                    value={password}
+                    onChangeText={text => {
+                        setPassword(text)
+                    }} style={styles.input}/>
+                </View>
+            {/*<Image style={styles.img} source={imgList[props.data.img || 0]}/>*/}
+                <Button onPress={login} title={'  Click to Login  '}/>
         </View>
-        </ScrollView>}
+
     </Modal>
 
 }
@@ -94,7 +110,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'orange',
         position:'relative',
-        alignItems:'center',
     },
     close: {
         position: 'absolute',
@@ -119,5 +134,18 @@ const styles = StyleSheet.create({
         backgroundColor:'orange',
         justifyContent:"space-between",
         flexDirection:'row'
-    }
+    },
+    inputLabel: {
+        marginTop: 20,
+        backgroundColor: 'orange'
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#000',
+        borderRadius: 2,
+        height: 40,
+        marginTop: 5,
+        padding: 8,
+        backgroundColor:'#fff'
+    },
 })
